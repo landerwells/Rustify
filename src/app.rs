@@ -68,7 +68,7 @@ impl eframe::App for TemplateApp {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             // The central panel the region left after adding TopPanel's and SidePanel's
-            ui.heading("Rustify");
+            // ui.heading("Rustify");
 
             // ui.horizontal(|ui| {
             //     ui.label("Write something: ");
@@ -80,16 +80,13 @@ impl eframe::App for TemplateApp {
             //     self.value += 1.0;
             // }
 
-            ui.separator();
+            // ui.separator();
 
-            if ui.button("Button").clicked() {
+            if ui.button("Play/Pause").clicked() {
                 let file_path = "CantinaBand60.wav"; // Replace with the actual file path
                 if let Err(e) = play_wav_file(file_path) {
                     eprintln!("Error playing file: {}", e);
                 }
-
-
-
             }
 
             // ui.add(egui::github_link_file!(
@@ -97,24 +94,30 @@ impl eframe::App for TemplateApp {
             //     "Source code."
             // ));
 
-            ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-                powered_by_egui_and_eframe(ui);
-                egui::warn_if_debug_build(ui);
+            // ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
+            //     powered_by_egui_and_eframe(ui);
+            //     egui::warn_if_debug_build(ui);
+            // });
+        });
+
+        egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
+            ui.horizontal_centered( |ui| {
+                ui.button("Play/Pause").clicked();
             });
         });
     }
 }
 
-fn powered_by_egui_and_eframe(ui: &mut egui::Ui) {
-    ui.horizontal(|ui| {
-        ui.spacing_mut().item_spacing.x = 0.0;
-        ui.label("Powered by ");
-        ui.hyperlink_to("egui", "https://github.com/emilk/egui");
-        ui.label(" and ");
-        ui.hyperlink_to(
-            "eframe",
-            "https://github.com/emilk/egui/tree/master/crates/eframe",
-        );
-        ui.label(".");
-    });
-}
+// fn powered_by_egui_and_eframe(ui: &mut egui::Ui) {
+//     ui.horizontal(|ui| {
+//         ui.spacing_mut().item_spacing.x = 0.0;
+//         ui.label("Powered by ");
+//         ui.hyperlink_to("egui", "https://github.com/emilk/egui");
+//         ui.label(" and ");
+//         ui.hyperlink_to(
+//             "eframe",
+//             "https://github.com/emilk/egui/tree/master/crates/eframe",
+//         );
+//         ui.label(".");
+//     });
+// }
