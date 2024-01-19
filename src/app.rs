@@ -1,4 +1,5 @@
 use crate::audio::play_wav_file;
+use std::thread;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -66,7 +67,7 @@ impl eframe::App for TemplateApp {
             });
         });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
+        // egui::CentralPanel::default().show(ctx, |ui| {
             // The central panel the region left after adding TopPanel's and SidePanel's
             // ui.heading("Rustify");
 
@@ -82,12 +83,6 @@ impl eframe::App for TemplateApp {
 
             // ui.separator();
 
-            if ui.button("Play/Pause").clicked() {
-                let file_path = "CantinaBand60.wav"; // Replace with the actual file path
-                if let Err(e) = play_wav_file(file_path) {
-                    eprintln!("Error playing file: {}", e);
-                }
-            }
 
             // ui.add(egui::github_link_file!(
             //     "https://github.com/emilk/eframe_template/blob/master/",
@@ -98,11 +93,18 @@ impl eframe::App for TemplateApp {
             //     powered_by_egui_and_eframe(ui);
             //     egui::warn_if_debug_build(ui);
             // });
-        });
+        // });
 
         egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
-            ui.horizontal_centered( |ui| {
-                ui.button("Play/Pause").clicked();
+            ui.horizontal_centered(|ui| {
+            if ui.button("Play/Pause").clicked() {
+                let file_path = "CantinaBand60.wav"; // Replace with the actual file path
+                thread::spawn(|| {
+                    if let Err(e) = play_wav_file(file_path) {
+                        eprintln!("Error playing file: {}", e);
+                    }
+                });
+            }
             });
         });
     }
