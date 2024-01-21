@@ -1,4 +1,8 @@
+use crate::audio::create_audio_thread;
 use crate::audio::play_wav_file;
+use crate::audio::AudioCommand;
+use crate::audio::AudioState;
+use std::fs;
 use std::thread;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -9,7 +13,9 @@ pub struct TemplateApp {
     label: String,
 
     #[serde(skip)] // This how you opt-out of serialization of a field
-    value: f32,
+    volume: f32,
+    #[serde(skip)] // This how you opt-out of serialization of a field
+    audio_thread_sender: std::sync::mpsc::Sender<AudioCommand>,
 }
 
 impl Default for TemplateApp {
@@ -17,7 +23,8 @@ impl Default for TemplateApp {
         Self {
             // Example stuff:
             label: "Hello World!".to_owned(),
-            value: 2.7,
+            volume: 1.0,
+            audio_thread_sender: create_audio_thread(),
         }
     }
 }
@@ -67,7 +74,31 @@ impl eframe::App for TemplateApp {
             });
         });
 
-        // egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            egui::CentralPanel::default().show(ctx, |ui| {
+                if let Ok(entries) = fs::read_dir(".") {
+                    entries
+                        .filter_map(Result::ok)
+                        .filter(|entry| {
+                            entry.path().is_file()
+                                && entry
+                                    .path()
+                                    .extension()
+                                    .map_or(false, |ext| ext == "wav" || ext == "mp3")
+                        })
+                        .for_each(|entry| {
+                            let path = entry.path();
+                            if ui.button(path.to_string_lossy()).clicked() {
+                                let file_path = path.to_string_lossy().to_string();
+                                // Send play command to the audio thread
+                                self.audio_thread_sender
+                                    .send(AudioCommand::PlaySong(file_path))
+                                    .unwrap();
+                            }
+                        });
+                }
+            });
+
             // The central panel the region left after adding TopPanel's and SidePanel's
             // ui.heading("Rustify");
 
@@ -76,13 +107,7 @@ impl eframe::App for TemplateApp {
             //     ui.text_edit_singleline(&mut self.label);
             // });
 
-            // ui.add(egui::Slider::new(&mut self.value, 0.0..=10.0).text("value"));
-            // if ui.button("Increment").clicked() {
-            //     self.value += 1.0;
-            // }
-
             // ui.separator();
-
 
             // ui.add(egui::github_link_file!(
             //     "https://github.com/emilk/eframe_template/blob/master/",
@@ -93,18 +118,57 @@ impl eframe::App for TemplateApp {
             //     powered_by_egui_and_eframe(ui);
             //     egui::warn_if_debug_build(ui);
             // });
-        // });
+        });
 
         egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
             ui.horizontal_centered(|ui| {
-            if ui.button("Play/Pause").clicked() {
-                let file_path = "CantinaBand60.wav"; // Replace with the actual file path
-                thread::spawn(|| {
-                    if let Err(e) = play_wav_file(file_path) {
-                        eprintln!("Error playing file: {}", e);
+                // Volume slider
+                let mut volume = self.volume; // Assuming `self.volume` holds the current volume
+                ui.add(egui::Slider::new(&mut volume, 0.0..=1.0).text("Volume"));
+                if volume != self.volume {
+                    self.volume = volume;
+                    // Send volume update to the audio thread
+                    self.audio_thread_sender
+                        .send(AudioCommand::SetVolume(volume))
+                        .unwrap();
+                }
+                // if ui.button("Play/Pause").clicked() {
+                //     if self.audio_thread_sender.send(AudioCommand::GetState) == "Playing" {
+                //         self.audio_thread_sender.send(AudioCommand::Pause).unwrap();
+                //     }
+                //     let file_path = "CantinaBand60.wav"; // Replace with the actual file path
+                //     self.audio_thread_sender
+                //         .send(AudioCommand::Play("CantinaBand60.wav".to_string()))
+                //         .unwrap();
+
+                //     // thread::spawn(|| {
+                //     //     if let Err(e) = play_wav_file(file_path) {
+                //     //         eprintln!("Error playing file: {}", e);
+                //     //     }
+                //     // });
+                // }
+                if ui.button("Play/Pause").clicked() {
+                    let (state_sender, state_receiver) = std::sync::mpsc::channel();
+                    self.audio_thread_sender
+                        .send(AudioCommand::GetState(state_sender))
+                        .unwrap();
+
+                    // Receive the current state
+                    match state_receiver.recv() {
+                        Ok(AudioState::Playing) => {
+                            self.audio_thread_sender.send(AudioCommand::Pause).unwrap();
+                        }
+                        Ok(AudioState::Paused) => {
+                            self.audio_thread_sender.send(AudioCommand::Play).unwrap();
+                        }
+                        _ => {
+                            let file_path = "CantinaBand60.wav".to_string();
+                            self.audio_thread_sender
+                                .send(AudioCommand::PlaySong(file_path))
+                                .unwrap();
+                        }
                     }
-                });
-            }
+                }
             });
         });
     }
