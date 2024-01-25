@@ -1,9 +1,9 @@
 use crate::audio::create_audio_thread;
-use crate::audio::play_wav_file;
+// use crate::audio::play_wav_file;
 use crate::audio::AudioCommand;
 use crate::audio::AudioState;
 use std::fs;
-use std::thread;
+// use std::thread;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -11,9 +11,12 @@ use std::thread;
 pub struct TemplateApp {
     // Example stuff:
     label: String,
+    is_playing: bool,
 
     #[serde(skip)] // This how you opt-out of serialization of a field
     volume: f32,
+    #[serde(skip)] // This how you opt-out of serialization of a field
+    track_progress: f32,
     #[serde(skip)] // This how you opt-out of serialization of a field
     audio_thread_sender: std::sync::mpsc::Sender<AudioCommand>,
 }
@@ -23,7 +26,9 @@ impl Default for TemplateApp {
         Self {
             // Example stuff:
             label: "Hello World!".to_owned(),
+            is_playing: false,
             volume: 1.0,
+            track_progress: 0.0,
             audio_thread_sender: create_audio_thread(),
         }
     }
@@ -55,6 +60,24 @@ impl eframe::App for TemplateApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         // Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
         // For inspiration and more examples, go to https://emilk.github.io/egui
+
+        // Need to set is_playing to true when a song is playing
+
+        let (state_sender, state_receiver) = std::sync::mpsc::channel();
+        self.audio_thread_sender
+            .send(AudioCommand::GetState(state_sender))
+            .unwrap();
+
+        // Receive the current state
+        match state_receiver.recv() {
+            Ok(AudioState::Playing) => {
+                self.is_playing = true;
+            }
+            Ok(AudioState::Paused) => {
+                self.is_playing = false;
+            }
+            _ => (),
+        }
 
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
@@ -123,31 +146,17 @@ impl eframe::App for TemplateApp {
         egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
             ui.horizontal_centered(|ui| {
                 // Volume slider
-                let mut volume = self.volume; // Assuming `self.volume` holds the current volume
-                ui.add(egui::Slider::new(&mut volume, 0.0..=1.0).text("Volume"));
-                if volume != self.volume {
-                    self.volume = volume;
-                    // Send volume update to the audio thread
-                    self.audio_thread_sender
-                        .send(AudioCommand::SetVolume(volume))
-                        .unwrap();
-                }
-                // if ui.button("Play/Pause").clicked() {
-                //     if self.audio_thread_sender.send(AudioCommand::GetState) == "Playing" {
-                //         self.audio_thread_sender.send(AudioCommand::Pause).unwrap();
-                //     }
-                //     let file_path = "CantinaBand60.wav"; // Replace with the actual file path
-                //     self.audio_thread_sender
-                //         .send(AudioCommand::Play("CantinaBand60.wav".to_string()))
-                //         .unwrap();
-
-                //     // thread::spawn(|| {
-                //     //     if let Err(e) = play_wav_file(file_path) {
-                //     //         eprintln!("Error playing file: {}", e);
-                //     //     }
-                //     // });
+                // let mut volume = self.volume; // Assuming `self.volume` holds the current volume
+                ui.add(egui::Slider::new(&mut self.volume, 0.0..=1.0).text("Volume"));
+                // if volume != self.volume {
+                // self.volume = volume;
+                // Send volume update to the audio thread
+                self.audio_thread_sender
+                    .send(AudioCommand::SetVolume(self.volume))
+                    .unwrap();
                 // }
-                if ui.button("Play/Pause").clicked() {
+                let button_label = if self.is_playing { "⏸" } else { "▶" };
+                if ui.button(button_label).clicked() {
                     let (state_sender, state_receiver) = std::sync::mpsc::channel();
                     self.audio_thread_sender
                         .send(AudioCommand::GetState(state_sender))
@@ -161,14 +170,19 @@ impl eframe::App for TemplateApp {
                         Ok(AudioState::Paused) => {
                             self.audio_thread_sender.send(AudioCommand::Play).unwrap();
                         }
-                        _ => {
-                            let file_path = "CantinaBand60.wav".to_string();
-                            self.audio_thread_sender
-                                .send(AudioCommand::PlaySong(file_path))
-                                .unwrap();
-                        }
+                        _ => (),
                     }
                 }
+                if ui.button("⏭").clicked() {
+                    self.audio_thread_sender.send(AudioCommand::Skip).unwrap();
+                }
+                // Find current track duration
+                // find current track progress
+                // divide
+
+                ui.add(
+                    egui::Slider::new(&mut self.track_progress, 0.0..=1.0).text("Track Progress"),
+                );
             });
         });
     }

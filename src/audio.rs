@@ -1,7 +1,6 @@
 use rodio::decoder::Decoder;
 use rodio::OutputStream;
 use rodio::Sink;
-use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
 use std::sync::mpsc::{self, Sender};
@@ -12,6 +11,7 @@ pub enum AudioCommand {
     PlaySong(String),
     Play,
     Pause,
+    Skip,
     Queue(String),
     Stop,
     GetState(Sender<AudioState>),
@@ -22,26 +22,36 @@ pub enum AudioState {
     Playing,
     Paused,
     Stopped,
-    NotCreated,
 }
 
-pub fn play_wav_file(file_path: &str) -> Result<(), Box<dyn Error>> {
-    // Get a handle to the default audio output device
-    let (_stream, stream_handle) = OutputStream::try_default()?;
-    // Open the file
-    let file = File::open(file_path)?;
-    let buf_reader = BufReader::new(file);
-
-    // Decode the WAV file
-    let source = Decoder::new_wav(buf_reader)?;
-
-    // Play the sound
-    let sink = rodio::Sink::try_new(&stream_handle)?;
-    sink.append(source);
-    sink.sleep_until_end();
-
-    Ok(())
+struct Queue {
+    tracks: Vec<Track>,
 }
+
+struct Track {
+    file_path: String,
+    title: String,
+    // artist: String,
+    // album: String,
+    duration: u32,
+    track_progress: u32,
+    // track_number: u32,
+    // year: u32,
+    // genre: String,
+}
+
+// Need to implement a current song structure
+// If a new track starts playing from the queue we need to update it
+// Ways I could implement,
+
+// I could ignore the inbuilt queue from rodio and build my own queue to
+// avoid the queues diverging
+// This option become more enticing due to the empty function that can
+// return true when the sink is empty, prompting a new song to go by grabbing
+// from the queue
+
+// I could use the queue since it provides a lot of good features and
+// make a failsafe option that always mimics the real queue
 
 pub fn create_audio_thread() -> Sender<AudioCommand> {
     let (sender, receiver) = mpsc::channel();
@@ -49,7 +59,7 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
     thread::spawn(move || {
         let mut current_state = AudioState::Stopped; // Initial state
         let (_stream, stream_handle) = OutputStream::try_default().unwrap();
-        let mut sink: Sink = rodio::Sink::try_new(&stream_handle).unwrap();
+        let sink: Sink = rodio::Sink::try_new(&stream_handle).unwrap();
 
         for command in receiver {
             match command {
@@ -57,15 +67,30 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
                     sink.play();
                     current_state = AudioState::Playing;
                 }
-                AudioCommand::PlaySong(file_path) => {
-                    let file = BufReader::new(File::open(file_path).unwrap());
-                    let source = Decoder::new_wav(file).unwrap();
-                    sink.append(source);
-                    current_state = AudioState::Playing;
-                }
+                AudioCommand::PlaySong(file_path) => match file_path.split('.').last() {
+                    Some("mp3") => {
+                        let file = BufReader::new(File::open(file_path).unwrap());
+                        let source = Decoder::new_mp3(file).unwrap();
+                        sink.append(source);
+                        current_state = AudioState::Playing;
+                    }
+                    Some("wav") => {
+                        let file = BufReader::new(File::open(file_path).unwrap());
+                        let source = Decoder::new_wav(file).unwrap();
+                        sink.append(source);
+                        current_state = AudioState::Playing;
+                    }
+                    _ => (),
+                },
                 AudioCommand::Pause => {
                     sink.pause();
                     current_state = AudioState::Paused;
+                }
+                AudioCommand::Skip => {
+                    // This needs to be modiefied in order to make the play
+                    // puase functionality work correctly
+                    sink.skip_one();
+                    current_state = AudioState::Playing;
                 }
                 AudioCommand::Stop => {
                     sink.stop();
