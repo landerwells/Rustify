@@ -76,6 +76,9 @@ impl eframe::App for TemplateApp {
             Ok(AudioState::Paused) => {
                 self.is_playing = false;
             }
+            Ok(AudioState::Stopped) => {
+                self.is_playing = false;
+            }
             _ => (),
         }
 
@@ -200,4 +203,3 @@ impl eframe::App for TemplateApp {
 //         );
 //         ui.label(".");
 //     });
-// }
