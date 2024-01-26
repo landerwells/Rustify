@@ -1,5 +1,4 @@
 use rodio::decoder::Decoder;
-use rodio::source;
 use rodio::OutputStream;
 use rodio::Sink;
 use rodio::Source;
@@ -104,28 +103,6 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
                         current_state = AudioState::Playing;
                         println!("The audio state is currently: {:?}", current_state);
                     }
-                    // AudioCommand::PlaySong(file_path) => match file_path.split('.').last() {
-                    //     Some("mp3") => {
-                    //         println!("The file path is: {}", file_path);
-                    //         let file = BufReader::new(File::open(file_path).unwrap());
-                    //         let source = Decoder::new_mp3(file).unwrap();
-                    //         // Changing this from just append to stop and then append
-                    //         // so that songs will change instantly.
-                    //         sink.stop();
-                    //         sink.append(source);
-                    //         current_state = AudioState::Playing;
-                    //         println!("The audio state is currently: {:?}", current_state);
-                    //     }
-                    //     Some("wav") => {
-                    //         let file = BufReader::new(File::open(file_path).unwrap());
-                    //         let source = Decoder::new_wav(file).unwrap();
-                    //         sink.stop();
-                    //         sink.append(source);
-                    //         current_state = AudioState::Playing;
-                    //         println!("The audio state is currently: {:?}", current_state);
-                    //     }
-                    //     _ => (),
-                    // },
                     AudioCommand::Pause => {
                         sink.pause();
                         current_state = AudioState::Paused;

@@ -1,23 +1,18 @@
 use crate::audio::create_audio_thread;
-// use crate::audio::play_wav_file;
 use crate::audio::AudioCommand;
 use crate::audio::AudioState;
 use std::fs;
-// use std::thread;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct TemplateApp {
     // Example stuff:
-    label: String,
     is_playing: bool,
-
-    #[serde(skip)] // This how you opt-out of serialization of a field
     volume: f32,
-    #[serde(skip)] // This how you opt-out of serialization of a field
     track_progress: f32,
-    #[serde(skip)] // This how you opt-out of serialization of a field
+
+    #[serde(skip)]
     audio_thread_sender: std::sync::mpsc::Sender<AudioCommand>,
 }
 
@@ -25,7 +20,6 @@ impl Default for TemplateApp {
     fn default() -> Self {
         Self {
             // Example stuff:
-            label: "Hello World!".to_owned(),
             is_playing: false,
             volume: 1.0,
             track_progress: 0.0,
@@ -60,8 +54,6 @@ impl eframe::App for TemplateApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         // Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
         // For inspiration and more examples, go to https://emilk.github.io/egui
-
-        // Need to set is_playing to true when a song is playing
 
         let (state_sender, state_receiver) = std::sync::mpsc::channel();
         self.audio_thread_sender
@@ -100,6 +92,11 @@ impl eframe::App for TemplateApp {
             });
         });
 
+        egui::SidePanel::left("side_panel").show(ctx, |ui| {
+            ui.heading("Side Panel");
+            ui.label("Lorem ipsum");
+        });
+
         egui::CentralPanel::default().show(ctx, |ui| {
             egui::CentralPanel::default().show(ctx, |ui| {
                 if let Ok(entries) = fs::read_dir(".") {
@@ -127,23 +124,6 @@ impl eframe::App for TemplateApp {
 
             // The central panel the region left after adding TopPanel's and SidePanel's
             // ui.heading("Rustify");
-
-            // ui.horizontal(|ui| {
-            //     ui.label("Write something: ");
-            //     ui.text_edit_singleline(&mut self.label);
-            // });
-
-            // ui.separator();
-
-            // ui.add(egui::github_link_file!(
-            //     "https://github.com/emilk/eframe_template/blob/master/",
-            //     "Source code."
-            // ));
-
-            // ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-            //     powered_by_egui_and_eframe(ui);
-            //     egui::warn_if_debug_build(ui);
-            // });
         });
 
         egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
@@ -190,16 +170,3 @@ impl eframe::App for TemplateApp {
         });
     }
 }
-
-// fn powered_by_egui_and_eframe(ui: &mut egui::Ui) {
-//     ui.horizontal(|ui| {
-//         ui.spacing_mut().item_spacing.x = 0.0;
-//         ui.label("Powered by ");
-//         ui.hyperlink_to("egui", "https://github.com/emilk/egui");
-//         ui.label(" and ");
-//         ui.hyperlink_to(
-//             "eframe",
-//             "https://github.com/emilk/egui/tree/master/crates/eframe",
-//         );
-//         ui.label(".");
-//     });
