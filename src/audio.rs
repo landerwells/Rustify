@@ -14,6 +14,7 @@ pub enum AudioCommand {
     Play,
     Pause,
     Skip,
+    // GetTrackDuration,
     Queue(String),
     Stop,
     GetState(Sender<AudioState>),
@@ -31,16 +32,16 @@ struct Queue {
 }
 
 struct Track {
+    // album: String,
+    // artist: String,
+    // genre: String,
+    // track_number: u32,
+    // type duration
+    // year: u32,
+    duration: Option<Duration>,
     file_path: String,
     source: Decoder<BufReader<File>>,
-    // artist: String,
-    // album: String,
-    // type duration
-    duration: Option<Duration>,
     track_progress: Option<Duration>,
-    // track_number: u32,
-    // year: u32,
-    // genre: String,
 }
 
 impl Track {
@@ -89,6 +90,8 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
             let sink: Sink = rodio::Sink::try_new(&stream_handle).unwrap();
 
+            // let mut queue = Queue { tracks: Vec::new() };
+
             for command in receiver {
                 match command {
                     AudioCommand::Play => {
@@ -100,6 +103,8 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
                         let song = Track::new(file_path);
                         sink.stop();
                         sink.append(song.unwrap().source);
+                        // queue.tracks.insert(0, song.unwrap());
+                        sink.play();
                         current_state = AudioState::Playing;
                         println!("The audio state is currently: {:?}", current_state);
                     }
@@ -109,9 +114,7 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
                         println!("The audio state is currently: {:?}", current_state);
                     }
                     AudioCommand::Skip => {
-                        // This needs to be modiefied in order to make the play
-                        // puase functionality work correctly
-                        if sink.len() == 1 {
+                        if sink.len() <= 1 {
                             sink.stop();
                             current_state = AudioState::Stopped;
                             println!("The audio state is currently: {:?}", current_state);
@@ -125,17 +128,18 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
                         sink.stop();
                         current_state = AudioState::Playing;
                         println!("The audio state is currently: {:?}", current_state);
-                    } // handle other commands
+                    }
                     AudioCommand::Queue(file_path) => {
                         let file = BufReader::new(File::open(file_path).unwrap());
                         let source = Decoder::new_wav(file).unwrap();
                         sink.append(source);
                         current_state = AudioState::Playing;
                     }
-                    AudioCommand::GetState(sender) => {
-                        sender.send(current_state).unwrap(); // Send the current state back
-                    }
+                    AudioCommand::GetState(sender) => sender.send(current_state).unwrap(),
                     AudioCommand::SetVolume(volume) => sink.set_volume(volume),
+                    // AudioCommand::GetTrackDuration => {
+                    //     queue.tracks[0].duration.unwrap();
+                    // }
                 }
             }
         })

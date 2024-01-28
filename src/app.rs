@@ -98,33 +98,51 @@ impl eframe::App for TemplateApp {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui::CentralPanel::default().show(ctx, |ui| {
+            ui.vertical_centered(|ui| {
+                ui.heading("Songs");
+            });
+            egui::ScrollArea::vertical().show(ui, |ui| {
                 if let Ok(entries) = fs::read_dir(".") {
-                    entries
-                        .filter_map(Result::ok)
-                        .filter(|entry| {
-                            entry.path().is_file()
-                                && entry
-                                    .path()
-                                    .extension()
-                                    .map_or(false, |ext| ext == "wav" || ext == "mp3")
-                        })
-                        .for_each(|entry| {
-                            let path = entry.path();
-                            if ui.button(path.to_string_lossy()).clicked() {
-                                let file_path = path.to_string_lossy().to_string();
-                                // Send play command to the audio thread
-                                self.audio_thread_sender
-                                    .send(AudioCommand::PlaySong(file_path))
-                                    .unwrap();
+                    for entry in entries.filter_map(Result::ok) {
+                        if let Ok(path) = entry.path().into_os_string().into_string() {
+                            if entry.path().is_file()
+                                && ["wav", "mp3"].contains(
+                                    &entry
+                                        .path()
+                                        .extension()
+                                        .and_then(std::ffi::OsStr::to_str)
+                                        .unwrap_or(""),
+                                )
+                            {
+                                // Specify a fixed height for the button
+                                let button_height = 30.0; // Adjust this value as needed
+                                let button = egui::Button::new(path.clone())
+                                    .fill(ui.style().visuals.window_fill()); // Matching button color to window background
+
+                                if ui
+                                    .add_sized(
+                                        egui::vec2(ui.available_width(), button_height),
+                                        button,
+                                    )
+                                    .clicked()
+                                {
+                                    // Send play command to the audio thread
+                                    self.audio_thread_sender
+                                        .send(AudioCommand::PlaySong(path))
+                                        .unwrap();
+                                }
+
+                                // Separator after each button
+                                ui.separator();
                             }
-                        });
+                        }
+                    }
                 }
             });
-
-            // The central panel the region left after adding TopPanel's and SidePanel's
-            // ui.heading("Rustify");
         });
+
+        // The central panel the region left after adding TopPanel's and SidePanel's
+        // ui.heading("Rustify");
 
         egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
             ui.horizontal_centered(|ui| {
@@ -159,7 +177,9 @@ impl eframe::App for TemplateApp {
                 if ui.button("⏭").clicked() {
                     self.audio_thread_sender.send(AudioCommand::Skip).unwrap();
                 }
+
                 // Find current track duration
+
                 // find current track progress
                 // divide
 
