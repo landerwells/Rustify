@@ -2,6 +2,7 @@ use crate::audio::create_audio_thread;
 use crate::audio::AudioCommand;
 use crate::audio::AudioState;
 use std::fs;
+use std::vec;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -11,6 +12,7 @@ pub struct TemplateApp {
     is_playing: bool,
     volume: f32,
     track_progress: f32,
+    playlists: Vec<Vec<String>>,
 
     #[serde(skip)]
     audio_thread_sender: std::sync::mpsc::Sender<AudioCommand>,
@@ -24,6 +26,7 @@ impl Default for TemplateApp {
             volume: 1.0,
             track_progress: 0.0,
             audio_thread_sender: create_audio_thread(),
+            playlists: vec![vec![]],
         }
     }
 }
@@ -98,46 +101,77 @@ impl eframe::App for TemplateApp {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.vertical_centered(|ui| {
-                ui.heading("Songs");
-            });
-            egui::ScrollArea::vertical().show(ui, |ui| {
-                if let Ok(entries) = fs::read_dir(".") {
-                    for entry in entries.filter_map(Result::ok) {
-                        if let Ok(path) = entry.path().into_os_string().into_string() {
-                            if entry.path().is_file()
-                                && ["wav", "mp3"].contains(
-                                    &entry
-                                        .path()
-                                        .extension()
-                                        .and_then(std::ffi::OsStr::to_str)
-                                        .unwrap_or(""),
-                                )
-                            {
-                                // Specify a fixed height for the button
-                                let button_height = 30.0; // Adjust this value as needed
-                                let button = egui::Button::new(path.clone())
-                                    .fill(ui.style().visuals.window_fill()); // Matching button color to window background
+            // Use a vertical layout
+            ui.vertical(|ui| {
+                // Header with left padding
+                ui.horizontal(|ui| {
+                    ui.add_space(10.0); // Left padding for the header
+                    ui.heading("Songs");
+                });
 
-                                if ui
-                                    .add_sized(
-                                        egui::vec2(ui.available_width(), button_height),
-                                        button,
+                // Separator after the header
+                ui.separator();
+
+                // Scrollable area for the song list
+                egui::ScrollArea::vertical().show(ui, |ui| {
+                    if let Ok(entries) = fs::read_dir(".") {
+                        for entry in entries.filter_map(Result::ok) {
+                            if let Ok(mut path) = entry.path().into_os_string().into_string() {
+                                if entry.path().is_file()
+                                    && ["wav", "mp3"].contains(
+                                        &entry
+                                            .path()
+                                            .extension()
+                                            .and_then(std::ffi::OsStr::to_str)
+                                            .unwrap_or(""),
                                     )
-                                    .clicked()
                                 {
-                                    // Send play command to the audio thread
-                                    self.audio_thread_sender
-                                        .send(AudioCommand::PlaySong(path))
-                                        .unwrap();
-                                }
+                                    // Remove leading "./" and file extension
+                                    if path.starts_with("./") {
+                                        path.drain(..2);
+                                    }
+                                    if let Some(ext_pos) = path.rfind('.') {
+                                        path.truncate(ext_pos);
+                                    }
 
-                                // Separator after each button
-                                ui.separator();
+                                    // Song button with left padding
+                                    ui.horizontal(|ui| {
+                                        ui.add_space(10.0); // Left padding for the button
+                                        let button = egui::Button::new(&path)
+                                            .fill(ui.style().visuals.window_fill());
+
+                                        if ui
+                                            .add_sized(
+                                                egui::vec2(ui.available_width() - 10.0, 30.0),
+                                                button,
+                                            )
+                                            .clicked()
+                                        {
+                                            // Send play command to the audio thread
+                                            self.audio_thread_sender
+                                                .send(AudioCommand::PlaySong(
+                                                    entry.path().to_string_lossy().to_string(),
+                                                ))
+                                                .unwrap();
+                                        }
+
+                                        ui.menu_button("Click for menu", nested_menus);
+                                        ui.button("Right-click for menu")
+                                            .context_menu(nested_menus);
+                                        if ui.ctx().is_context_menu_open() {
+                                            ui.label("Context menu is open");
+                                        } else {
+                                            ui.label("Context menu is closed");
+                                        }
+                                    });
+
+                                    // Separator after each song
+                                    ui.separator();
+                                }
                             }
                         }
                     }
-                }
+                });
             });
         });
 
@@ -188,5 +222,39 @@ impl eframe::App for TemplateApp {
                 );
             });
         });
+
+        fn nested_menus(ui: &mut egui::Ui) {
+            if ui.button("Open...").clicked() {
+                ui.close_menu();
+            }
+            ui.menu_button("SubMenu", |ui| {
+                ui.menu_button("SubMenu", |ui| {
+                    if ui.button("Open...").clicked() {
+                        ui.close_menu();
+                    }
+                    let _ = ui.button("Item");
+                });
+                ui.menu_button("SubMenu", |ui| {
+                    if ui.button("Open...").clicked() {
+                        ui.close_menu();
+                    }
+                    let _ = ui.button("Item");
+                });
+                let _ = ui.button("Item");
+                if ui.button("Open...").clicked() {
+                    ui.close_menu();
+                }
+            });
+            ui.menu_button("SubMenu", |ui| {
+                let _ = ui.button("Item1");
+                let _ = ui.button("Item2");
+                let _ = ui.button("Item3");
+                let _ = ui.button("Item4");
+                if ui.button("Open...").clicked() {
+                    ui.close_menu();
+                }
+            });
+            let _ = ui.button("Very long text for this item");
+        }
     }
 }
