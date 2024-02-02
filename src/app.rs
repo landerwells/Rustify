@@ -1,8 +1,8 @@
-use crate::audio::create_audio_thread;
-use crate::audio::AudioCommand;
-use crate::audio::AudioState;
-use std::fs;
-use std::vec;
+use crate::audio_thread::create_audio_thread;
+use crate::audio_thread::AudioCommand;
+use crate::audio_thread::AudioState;
+use crate::audio_track::get_tracks;
+use crate::audio_track::Track;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -12,7 +12,7 @@ pub struct TemplateApp {
     is_playing: bool,
     volume: f32,
     track_progress: f32,
-    playlists: Vec<Vec<String>>,
+    track_list: Vec<Track>,
 
     #[serde(skip)]
     audio_thread_sender: std::sync::mpsc::Sender<AudioCommand>,
@@ -25,8 +25,8 @@ impl Default for TemplateApp {
             is_playing: false,
             volume: 1.0,
             track_progress: 0.0,
+            track_list: get_tracks(),
             audio_thread_sender: create_audio_thread(),
-            playlists: vec![vec![]],
         }
     }
 }
@@ -101,75 +101,19 @@ impl eframe::App for TemplateApp {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            // Use a vertical layout
             ui.vertical(|ui| {
-                // Header with left padding
-                ui.horizontal(|ui| {
-                    ui.add_space(10.0); // Left padding for the header
-                    ui.heading("Songs");
-                });
+                ui.heading("Track List");
 
-                // Separator after the header
-                ui.separator();
-
-                // Scrollable area for the song list
                 egui::ScrollArea::vertical().show(ui, |ui| {
-                    if let Ok(entries) = fs::read_dir(".") {
-                        for entry in entries.filter_map(Result::ok) {
-                            if let Ok(mut path) = entry.path().into_os_string().into_string() {
-                                if entry.path().is_file()
-                                    && ["wav", "mp3"].contains(
-                                        &entry
-                                            .path()
-                                            .extension()
-                                            .and_then(std::ffi::OsStr::to_str)
-                                            .unwrap_or(""),
-                                    )
-                                {
-                                    // Remove leading "./" and file extension
-                                    if path.starts_with("./") {
-                                        path.drain(..2);
-                                    }
-                                    if let Some(ext_pos) = path.rfind('.') {
-                                        path.truncate(ext_pos);
-                                    }
-
-                                    // Song button with left padding
-                                    ui.horizontal(|ui| {
-                                        ui.add_space(10.0); // Left padding for the button
-                                        let button = egui::Button::new(&path)
-                                            .fill(ui.style().visuals.window_fill());
-
-                                        if ui
-                                            .add_sized(
-                                                egui::vec2(ui.available_width() - 10.0, 30.0),
-                                                button,
-                                            )
-                                            .clicked()
-                                        {
-                                            // Send play command to the audio thread
-                                            self.audio_thread_sender
-                                                .send(AudioCommand::PlaySong(
-                                                    entry.path().to_string_lossy().to_string(),
-                                                ))
-                                                .unwrap();
-                                        }
-
-                                        ui.menu_button("Click for menu", nested_menus);
-                                        ui.button("Right-click for menu")
-                                            .context_menu(nested_menus);
-                                        if ui.ctx().is_context_menu_open() {
-                                            ui.label("Context menu is open");
-                                        } else {
-                                            ui.label("Context menu is closed");
-                                        }
-                                    });
-
-                                    // Separator after each song
-                                    ui.separator();
-                                }
-                            }
+                    for track in &self.track_list {
+                        if ui.button(&track.title).clicked() {
+                            // Logic to play the track
+                            // Example: send a play command with the track's file path
+                            self.audio_thread_sender
+                                .send(AudioCommand::PlaySong(track.file_path.clone()))
+                                .unwrap();
                         }
+                        ui.separator();
                     }
                 });
             });
