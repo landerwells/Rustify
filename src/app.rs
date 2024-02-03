@@ -3,6 +3,10 @@ use crate::audio_thread::AudioCommand;
 use crate::audio_thread::AudioState;
 use crate::audio_track::get_tracks;
 use crate::audio_track::Track;
+use crate::playlist::Playlist;
+use crate::playlist::PlaylistList;
+use egui::widgets::Label;
+use egui::Sense;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -13,6 +17,8 @@ pub struct TemplateApp {
     volume: f32,
     track_progress: f32,
     track_list: Vec<Track>,
+    // playlist_list: PlaylistList,
+    playlist_list: Vec<Playlist>,
 
     #[serde(skip)]
     audio_thread_sender: std::sync::mpsc::Sender<AudioCommand>,
@@ -27,6 +33,8 @@ impl Default for TemplateApp {
             track_progress: 0.0,
             track_list: get_tracks(),
             audio_thread_sender: create_audio_thread(),
+            // playlist_list: PlaylistList::new(),
+            playlist_list: Vec::new(),
         }
     }
 }
@@ -95,14 +103,51 @@ impl eframe::App for TemplateApp {
             });
         });
 
+        // Playlists
+        // Getting some coupling here, would like to extract the more technical
+        // details into the playlist module but not for right now.
         egui::SidePanel::left("side_panel").show(ctx, |ui| {
-            ui.heading("Side Panel");
-            ui.label("Lorem ipsum");
+            ui.heading("Playlists");
+            // Add a new playlist
+            if ui.button("Add Playlist").clicked() {
+                let mut text = String::new();
+                ui.text_edit_singleline(&mut text);
+                print!("Playlist name: {}", text);
+                // new playlist should be named by the user
+                // pop up with text field and take the name
+
+                //
+                let playlist = Playlist::new("New Playlist".to_string());
+                self.playlist_list.push(playlist);
+            }
+            ui.separator();
+
+            let mut playlists_to_delete: Vec<String> = Vec::new();
+
+            for playlist in &self.playlist_list {
+                let button = ui.button(&playlist.name);
+
+                if button.clicked() {
+                    // print out name of playlist
+                    println!("Playlist: {}", playlist.name);
+                    // Left-click logic
+                    // e.g., Display songs in this playlist in the central display
+                }
+
+                button.context_menu(|ui| {
+                    if ui.button("Delete Playlist").clicked() {
+                        playlists_to_delete.push(playlist.name.clone());
+                    }
+                });
+            }
+            self.playlist_list
+                .retain(|p| !playlists_to_delete.contains(&p.name));
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.vertical(|ui| {
                 ui.heading("Track List");
+                ui.separator();
 
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     for track in &self.track_list {
@@ -127,13 +172,10 @@ impl eframe::App for TemplateApp {
                 // Volume slider
                 // let mut volume = self.volume; // Assuming `self.volume` holds the current volume
                 ui.add(egui::Slider::new(&mut self.volume, 0.0..=1.0).text("Volume"));
-                // if volume != self.volume {
-                // self.volume = volume;
-                // Send volume update to the audio thread
                 self.audio_thread_sender
                     .send(AudioCommand::SetVolume(self.volume))
                     .unwrap();
-                // }
+
                 let button_label = if self.is_playing { "⏸" } else { "▶" };
                 if ui.button(button_label).clicked() {
                     let (state_sender, state_receiver) = std::sync::mpsc::channel();
@@ -166,39 +208,5 @@ impl eframe::App for TemplateApp {
                 );
             });
         });
-
-        fn nested_menus(ui: &mut egui::Ui) {
-            if ui.button("Open...").clicked() {
-                ui.close_menu();
-            }
-            ui.menu_button("SubMenu", |ui| {
-                ui.menu_button("SubMenu", |ui| {
-                    if ui.button("Open...").clicked() {
-                        ui.close_menu();
-                    }
-                    let _ = ui.button("Item");
-                });
-                ui.menu_button("SubMenu", |ui| {
-                    if ui.button("Open...").clicked() {
-                        ui.close_menu();
-                    }
-                    let _ = ui.button("Item");
-                });
-                let _ = ui.button("Item");
-                if ui.button("Open...").clicked() {
-                    ui.close_menu();
-                }
-            });
-            ui.menu_button("SubMenu", |ui| {
-                let _ = ui.button("Item1");
-                let _ = ui.button("Item2");
-                let _ = ui.button("Item3");
-                let _ = ui.button("Item4");
-                if ui.button("Open...").clicked() {
-                    ui.close_menu();
-                }
-            });
-            let _ = ui.button("Very long text for this item");
-        }
     }
 }
