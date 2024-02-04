@@ -5,8 +5,7 @@ use crate::audio_track::get_tracks;
 use crate::audio_track::Track;
 use crate::playlist::Playlist;
 use crate::playlist::PlaylistList;
-use egui::widgets::Label;
-use egui::Sense;
+use crate::ui;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -20,10 +19,10 @@ pub struct TemplateApp {
     playlist_list: Vec<Playlist>,
 
     #[serde(skip)]
-    audio_thread_sender: std::sync::mpsc::Sender<AudioCommand>,
+    pub audio_thread_sender: std::sync::mpsc::Sender<AudioCommand>,
 
     #[serde(skip)]
-    track_list: Vec<Track>,
+    pub track_list: Vec<Track>,
 }
 
 impl Default for TemplateApp {
@@ -162,25 +161,10 @@ impl eframe::App for TemplateApp {
                 .retain(|p| !playlists_to_delete.contains(&p.name));
         });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
-            ui.vertical(|ui| {
-                ui.heading("Track List");
-                ui.separator();
-
-                egui::ScrollArea::vertical().show(ui, |ui| {
-                    for track in &self.track_list {
-                        if ui.button(&track.title).clicked() {
-                            // Logic to play the track
-                            // Example: send a play command with the track's file path
-                            self.audio_thread_sender
-                                .send(AudioCommand::PlaySong(track.file_path.clone()))
-                                .unwrap();
-                        }
-                        ui.separator();
-                    }
-                });
-            });
-        });
+        // Central Panel:
+        // Responsible for displaying all tracks or tracks in the current
+        // playlist.
+        ui::central_panel::show_central_panel(ctx, self);
 
         // The central panel the region left after adding TopPanel's and SidePanel's
         // ui.heading("Rustify");
