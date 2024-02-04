@@ -16,12 +16,14 @@ pub struct TemplateApp {
     is_playing: bool,
     volume: f32,
     track_progress: f32,
-    track_list: Vec<Track>,
     // playlist_list: PlaylistList,
     playlist_list: Vec<Playlist>,
 
     #[serde(skip)]
     audio_thread_sender: std::sync::mpsc::Sender<AudioCommand>,
+
+    #[serde(skip)]
+    track_list: Vec<Track>,
 }
 
 impl Default for TemplateApp {
@@ -83,6 +85,23 @@ impl eframe::App for TemplateApp {
                 self.is_playing = false;
             }
             _ => (),
+        }
+
+        // Request current song progress
+        let (sender, progress_receiver) = std::sync::mpsc::channel();
+        self.audio_thread_sender
+            .send(AudioCommand::GetProgress(sender))
+            .unwrap();
+
+        let (sender, duration_receiver) = std::sync::mpsc::channel();
+        self.audio_thread_sender
+            .send(AudioCommand::GetProgress(sender))
+            .unwrap();
+
+        if let Ok(progress) = progress_receiver.recv() {
+            if let Ok(duration) = duration_receiver.recv() {
+                self.track_progress = progress.as_secs_f32() / duration.as_secs_f32();
+            }
         }
 
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
