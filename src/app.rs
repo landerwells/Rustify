@@ -128,7 +128,6 @@ impl eframe::App for TemplateApp {
                 let button = ui.button(&playlist.name);
 
                 if button.clicked() {
-                    // print out name of playlist
                     println!("Playlist: {}", playlist.name);
                     // Left-click logic
                     // e.g., Display songs in this playlist in the central display
@@ -198,14 +197,18 @@ impl eframe::App for TemplateApp {
                     self.audio_thread_sender.send(AudioCommand::Skip).unwrap();
                 }
 
-                // Find current track duration
-
-                // find current track progress
-                // divide
-
-                ui.add(
-                    egui::Slider::new(&mut self.track_progress, 0.0..=1.0).text("Track Progress"),
-                );
+                if ui
+                    .add(
+                        egui::Slider::new(&mut self.track_progress, 0.0..=1.0)
+                            .text("Track Progress"),
+                    )
+                    .changed()
+                {
+                    // This block will only execute if the slider's value has changed
+                    self.audio_thread_sender
+                        .send(AudioCommand::SetProgress(self.track_progress))
+                        .unwrap();
+                }
             });
         });
     }

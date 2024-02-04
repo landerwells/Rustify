@@ -9,6 +9,7 @@ use std::thread;
 pub enum AudioCommand {
     SetVolume(f32),
     PlaySong(String),
+    SetProgress(f32),
     Play,
     Pause,
     Skip,
@@ -31,9 +32,16 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
             let mut current_state = AudioState::Stopped; // Initial state
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
             let sink: Sink = rodio::Sink::try_new(&stream_handle).unwrap();
+            // let mut source: Option<Decoder<BufReader<File>>> = None;
 
             for command in receiver {
                 match command {
+                    AudioCommand::SetProgress(progress) => {
+                        // Set the progress of the currently playing track
+                        // This is where you would update the progress bar in the UI
+                        // lets test with the progress bar whether it works.
+                        println!("The progress of the track is: {}", progress);
+                    }
                     AudioCommand::Play => {
                         sink.play();
                         current_state = AudioState::Playing;
