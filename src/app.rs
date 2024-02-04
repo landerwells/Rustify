@@ -12,11 +12,11 @@ use crate::ui;
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct TemplateApp {
     // Example stuff:
-    is_playing: bool,
-    volume: f32,
-    track_progress: f32,
+    pub is_playing: bool,
+    pub volume: f32,
+    pub track_progress: f32,
     // playlist_list: PlaylistList,
-    playlist_list: Vec<Playlist>,
+    pub playlist_list: Vec<Playlist>,
 
     #[serde(skip)]
     pub audio_thread_sender: std::sync::mpsc::Sender<AudioCommand>,
@@ -103,116 +103,24 @@ impl eframe::App for TemplateApp {
             }
         }
 
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            // The top panel is often a good place for a menu bar:
+        // Top Panel:
+        // Responsible for displaying the menu bar and the dark/light mode
+        // buttons.
+        ui::top_panel::show_top_panel(ctx, _frame, self);
 
-            egui::menu::bar(ui, |ui| {
-                #[cfg(not(target_arch = "wasm32"))] // no File->Quit on web pages!
-                {
-                    ui.menu_button("File", |ui| {
-                        if ui.button("Quit").clicked() {
-                            _frame.close();
-                        }
-                    });
-                    ui.add_space(16.0);
-                }
-
-                egui::widgets::global_dark_light_mode_buttons(ui);
-            });
-        });
-
-        // Playlists
-        // Getting some coupling here, would like to extract the more technical
-        // details into the playlist module but not for right now.
-        egui::SidePanel::left("side_panel").show(ctx, |ui| {
-            ui.heading("Playlists");
-            // Add a new playlist
-            if ui.button("Add Playlist").clicked() {
-                let mut text = String::new();
-                ui.text_edit_singleline(&mut text);
-                print!("Playlist name: {}", text);
-                // new playlist should be named by the user
-                // pop up with text field and take the name
-
-                //
-                let playlist = Playlist::new("New Playlist".to_string());
-                self.playlist_list.push(playlist);
-            }
-            ui.separator();
-
-            let mut playlists_to_delete: Vec<String> = Vec::new();
-
-            for playlist in &self.playlist_list {
-                let button = ui.button(&playlist.name);
-
-                if button.clicked() {
-                    println!("Playlist: {}", playlist.name);
-                    // Left-click logic
-                    // e.g., Display songs in this playlist in the central display
-                }
-
-                button.context_menu(|ui| {
-                    if ui.button("Delete Playlist").clicked() {
-                        playlists_to_delete.push(playlist.name.clone());
-                    }
-                });
-            }
-            self.playlist_list
-                .retain(|p| !playlists_to_delete.contains(&p.name));
-        });
+        // Side Panel:
+        // Responisble for displaying all the playlists and the ability to add
+        // new ones.
+        ui::side_panel::show_side_panel(ctx, self);
 
         // Central Panel:
         // Responsible for displaying all tracks or tracks in the current
         // playlist.
         ui::central_panel::show_central_panel(ctx, self);
 
-        // The central panel the region left after adding TopPanel's and SidePanel's
-        // ui.heading("Rustify");
-
-        egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
-            ui.horizontal_centered(|ui| {
-                // Volume slider
-                // let mut volume = self.volume; // Assuming `self.volume` holds the current volume
-                ui.add(egui::Slider::new(&mut self.volume, 0.0..=1.0).text("Volume"));
-                self.audio_thread_sender
-                    .send(AudioCommand::SetVolume(self.volume))
-                    .unwrap();
-
-                let button_label = if self.is_playing { "⏸" } else { "▶" };
-                if ui.button(button_label).clicked() {
-                    let (state_sender, state_receiver) = std::sync::mpsc::channel();
-                    self.audio_thread_sender
-                        .send(AudioCommand::GetState(state_sender))
-                        .unwrap();
-
-                    // Receive the current state
-                    match state_receiver.recv() {
-                        Ok(AudioState::Playing) => {
-                            self.audio_thread_sender.send(AudioCommand::Pause).unwrap();
-                        }
-                        Ok(AudioState::Paused) => {
-                            self.audio_thread_sender.send(AudioCommand::Play).unwrap();
-                        }
-                        _ => (),
-                    }
-                }
-                if ui.button("⏭").clicked() {
-                    self.audio_thread_sender.send(AudioCommand::Skip).unwrap();
-                }
-
-                if ui
-                    .add(
-                        egui::Slider::new(&mut self.track_progress, 0.0..=1.0)
-                            .text("Track Progress"),
-                    )
-                    .changed()
-                {
-                    // This block will only execute if the slider's value has changed
-                    self.audio_thread_sender
-                        .send(AudioCommand::SetProgress(self.track_progress))
-                        .unwrap();
-                }
-            });
-        });
+        // Bottom Panel:
+        // Responsible for displaying the volume slider, play/pause button,
+        // skip button, and the track progress bar.
+        ui::bottom_panel::show_bottom_panel(ctx, self);
     }
 }
