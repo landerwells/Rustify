@@ -1,6 +1,3 @@
-use crate::audio_thread::AudioCommand;
-use crate::audio_thread::AudioState;
-use crate::playlist::Playlist;
 use crate::TemplateApp;
 
 pub fn show_top_panel(ctx: &egui::Context, _frame: &mut eframe::Frame, app: &mut TemplateApp) {

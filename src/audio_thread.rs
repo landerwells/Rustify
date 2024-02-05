@@ -6,6 +6,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::sync::mpsc::{self, Sender};
 use std::thread;
+use std::thread::sleep;
 use std::time::{Duration, Instant};
 
 pub enum AudioCommand {
@@ -18,6 +19,7 @@ pub enum AudioCommand {
     Pause,
     Skip,
     GetState(Sender<AudioState>),
+    // SetState(AudioState),
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -67,28 +69,29 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
                             Ok(f) => BufReader::new(f),
                             Err(e) => {
                                 eprintln!("Error opening file: {}", e);
-                                continue; // Skip to the next command if the file can't be opened
+                                continue;
                             }
                         };
 
                         // Since we're only dealing with .wav files, directly attempt to decode as wav
-                        let source_result = Decoder::new_wav(file);
+                        let source = Decoder::new_wav(file).unwrap();
+                        let track_duration = source.total_duration().unwrap_or_default();
+                        sink.stop();
+                        sink.append(source);
+                        sink.play();
+                        current_state = AudioState::Playing;
+                        println!("The audio state is currently: {:?}", current_state);
 
-                        start_time = Some(Instant::now());
-                        match source_result {
-                            Ok(source) => {
-                                sink.stop();
-                                track_duration = source.total_duration();
-                                sink.append(source);
-                                sink.play();
-                                current_state = AudioState::Playing;
-                                println!("The audio state is currently: {:?}", current_state);
-                            }
-                            Err(e) => {
-                                eprintln!("Error decoding .wav file: {}", e);
-                                // Handle decoding error
-                            }
-                        }
+                        // Spawn a new thread to wait for the duration of the song
+                        let file_path_clone = file_path.clone();
+                        let track_duration_clone = track_duration;
+                        thread::spawn(move || {
+                            thread::sleep(track_duration_clone);
+                            println!("Song '{}' finished playing.", file_path_clone);
+                            // Send a message to the audio thread to skip to the next song
+
+                            current_state = AudioState::Stopped;
+                        });
                     }
                     AudioCommand::Pause => {
                         sink.pause();

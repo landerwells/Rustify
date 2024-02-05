@@ -1,6 +1,5 @@
 use crate::audio_thread::create_audio_thread;
 use crate::audio_thread::AudioCommand;
-use crate::audio_thread::AudioState;
 use crate::audio_track::get_tracks;
 use crate::audio_track::Track;
 use crate::playlist::Playlist;
@@ -64,45 +63,6 @@ impl eframe::App for TemplateApp {
 
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
-        // For inspiration and more examples, go to https://emilk.github.io/egui
-
-        let (state_sender, state_receiver) = std::sync::mpsc::channel();
-        self.audio_thread_sender
-            .send(AudioCommand::GetState(state_sender))
-            .unwrap();
-
-        // Receive the current state
-        match state_receiver.recv() {
-            Ok(AudioState::Playing) => {
-                self.is_playing = true;
-            }
-            Ok(AudioState::Paused) => {
-                self.is_playing = false;
-            }
-            Ok(AudioState::Stopped) => {
-                self.is_playing = false;
-            }
-            _ => (),
-        }
-
-        // Request current song progress
-        let (sender, progress_receiver) = std::sync::mpsc::channel();
-        self.audio_thread_sender
-            .send(AudioCommand::GetProgress(sender))
-            .unwrap();
-
-        let (sender, duration_receiver) = std::sync::mpsc::channel();
-        self.audio_thread_sender
-            .send(AudioCommand::GetProgress(sender))
-            .unwrap();
-
-        if let Ok(progress) = progress_receiver.recv() {
-            if let Ok(duration) = duration_receiver.recv() {
-                self.track_progress = progress.as_secs_f32() / duration.as_secs_f32();
-            }
-        }
-
         // Top Panel:
         // Responsible for displaying the menu bar and the dark/light mode
         // buttons.

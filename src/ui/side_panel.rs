@@ -1,4 +1,3 @@
-use crate::audio_thread::AudioCommand;
 use crate::playlist::Playlist;
 use crate::TemplateApp;
 
