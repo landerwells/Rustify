@@ -1,5 +1,5 @@
 [package]
-name = "music_player"
+name = "Rustify"
 version = "0.1.0"
 authors = ["Lander Wells <landerwells@gmail.com>"]
 edition = "2021"

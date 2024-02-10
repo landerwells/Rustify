@@ -3,6 +3,21 @@
 version = 3
 
 [[package]]
+name = "Rustify"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui",
+ "env_logger",
+ "image 0.23.14",
+ "lipsum",
+ "log",
+ "rodio",
+ "serde",
+ "wasm-bindgen-futures",
+]
+
+[[package]]
 name = "ab_glyph"
 version = "0.2.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1693,21 +1708,6 @@ dependencies = [
  "log",
  "wasi",
  "windows-sys 0.45.0",
-]
-
-[[package]]
-name = "music_player"
-version = "0.1.0"
-dependencies = [
- "eframe",
- "egui",
- "env_logger",
- "image 0.23.14",
- "lipsum",
- "log",
- "rodio",
- "serde",
- "wasm-bindgen-futures",
 ]
 
 [[package]]

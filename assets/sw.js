@@ -2,8 +2,8 @@ var cacheName = 'egui-template-pwa';
 var filesToCache = [
   './',
   './index.html',
-  './music_player.js',
-  './music_player_bg.wasm',
+  './Rustify.js',
+  './Rustify_bg.wasm',
 ];
 
 /* Start the service worker and cache all of the app's content */

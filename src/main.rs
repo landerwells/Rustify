@@ -36,7 +36,7 @@ fn main() -> eframe::Result<()> {
     eframe::run_native(
         "Rustify",
         native_options,
-        Box::new(|cc| Box::new(music_player::TemplateApp::new(cc))),
+        Box::new(|cc| Box::new(Rustify::TemplateApp::new(cc))),
     )
 }
 
