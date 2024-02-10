@@ -1,9 +1,12 @@
 use crate::audio_thread::create_audio_thread;
 use crate::audio_thread::AudioCommand;
-use crate::audio_track::get_tracks;
+use crate::audio_thread::AudioState;
+use crate::audio_track;
 use crate::audio_track::Track;
+use crate::audio_track::TrackList;
 use crate::playlist::Playlist;
 use crate::playlist::PlaylistList;
+use crate::queue::Queue;
 use crate::ui;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -11,28 +14,31 @@ use crate::ui;
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct TemplateApp {
     // Example stuff:
-    pub is_playing: bool,
+    pub audio_state: AudioState,
     pub volume: f32,
     pub track_progress: f32,
+    pub queue: Queue,
+    pub track_list: Vec<Track>,
     // playlist_list: PlaylistList,
     pub playlist_list: Vec<Playlist>,
 
     #[serde(skip)]
     pub audio_thread_sender: std::sync::mpsc::Sender<AudioCommand>,
-
-    #[serde(skip)]
-    pub track_list: Vec<Track>,
+    // #[serde(skip)]
+    // pub track_list: TrackList,
 }
 
 impl Default for TemplateApp {
     fn default() -> Self {
         Self {
             // Example stuff:
-            is_playing: false,
+            audio_state: AudioState::Empty,
             volume: 1.0,
             track_progress: 0.0,
-            track_list: get_tracks(),
+            track_list: audio_track::get_tracks(),
+            // track_list: TrackList::get_tracks(),
             audio_thread_sender: create_audio_thread(),
+            queue: Queue::new(),
             // playlist_list: PlaylistList::new(),
             playlist_list: Vec::new(),
         }

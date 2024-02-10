@@ -4,9 +4,30 @@
 // When compiling natively:
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result<()> {
+    use eframe::{run_native, IconData, NativeOptions};
+    use image::io::Reader as ImageReader;
+    use image::GenericImageView;
+    use std::path::Path;
+
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
 
+    // Load the image
+    let img_path = Path::new("assets/rustify.png");
+    let img = ImageReader::open(img_path)
+        .expect("Failed to open icon path")
+        .decode()
+        .expect("Failed to decode icon")
+        .to_rgba8();
+
+    let (width, height) = img.dimensions();
+    let rgba = img.into_raw();
+
     let native_options = eframe::NativeOptions {
+        icon_data: Some(IconData {
+            rgba,
+            width,
+            height,
+        }),
         initial_window_size: Some([400.0, 300.0].into()),
         min_window_size: Some([300.0, 220.0].into()),
         ..Default::default()

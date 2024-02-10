@@ -24,8 +24,9 @@ pub fn show_central_panel(ctx: &egui::Context, app: &mut TemplateApp) {
                     button.context_menu(|ui| {
                         // add to queue
                         if ui.button("Add to Queue").clicked() {
-                            // Logic to add the track to the queue
-                            // Example: add the track to the queue list
+                            app.queue.add_track(track.clone());
+                            // Find a way to close the context menu since I
+                            // don't want it to stay open.
                         }
                         ui.menu_button("Add to Playlist", |ui| {
                             for playlist in &app.playlist_list {

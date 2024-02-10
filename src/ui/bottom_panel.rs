@@ -3,6 +3,7 @@ use crate::audio_thread::AudioState;
 use crate::TemplateApp;
 
 pub fn show_bottom_panel(ctx: &egui::Context, app: &mut TemplateApp) {
+    ctx.request_repaint();
     let (state_sender, state_receiver) = std::sync::mpsc::channel();
     app.audio_thread_sender
         .send(AudioCommand::GetState(state_sender))
@@ -11,13 +12,23 @@ pub fn show_bottom_panel(ctx: &egui::Context, app: &mut TemplateApp) {
     // Receive the current state
     match state_receiver.recv() {
         Ok(AudioState::Playing) => {
-            app.is_playing = true;
+            app.audio_state = AudioState::Playing;
         }
         Ok(AudioState::Paused) => {
-            app.is_playing = false;
+            app.audio_state = AudioState::Paused;
         }
-        Ok(AudioState::Stopped) => {
-            app.is_playing = false;
+        Ok(AudioState::Empty) => {
+            if app.queue.tracks.len() > 0 {
+                app.audio_state = AudioState::Playing;
+                app.audio_thread_sender
+                    .send(AudioCommand::PlaySong(
+                        app.queue.tracks[0].file_path.clone(),
+                    ))
+                    .unwrap();
+                app.queue.tracks.remove(0);
+            } else {
+                app.audio_state = AudioState::Empty;
+            }
         }
         _ => (),
     }
@@ -31,7 +42,13 @@ pub fn show_bottom_panel(ctx: &egui::Context, app: &mut TemplateApp) {
                 .send(AudioCommand::SetVolume(app.volume))
                 .unwrap();
 
-            let button_label = if app.is_playing { "⏸" } else { "▶" };
+            let button_label = if app.audio_state == AudioState::Playing {
+                "⏸"
+            } else {
+                "▶"
+            };
+
+            // need to request repaint of the button
             if ui.button(button_label).clicked() {
                 let (state_sender, state_receiver) = std::sync::mpsc::channel();
                 app.audio_thread_sender

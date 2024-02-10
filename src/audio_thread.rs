@@ -1,7 +1,7 @@
 use rodio::decoder::Decoder;
 use rodio::OutputStream;
 use rodio::Sink;
-use rodio::Source;
+use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::BufReader;
 use std::sync::mpsc::{self, Sender};
@@ -13,6 +13,7 @@ pub enum AudioCommand {
     SetVolume(f32),
     PlaySong(String),
     SetProgress(f32),
+    // IsEmpty(Sender<bool>),
     GetProgress(Sender<Duration>),
     GetTrackDuration(Sender<Duration>),
     Play,
@@ -22,11 +23,11 @@ pub enum AudioCommand {
     // SetState(AudioState),
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
 pub enum AudioState {
     Playing,
     Paused,
-    Stopped,
+    Empty,
 }
 
 pub fn create_audio_thread() -> Sender<AudioCommand> {
@@ -35,7 +36,7 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
     thread::Builder::new()
         .name("Audio Thread".to_string())
         .spawn(move || {
-            let mut current_state = AudioState::Stopped; // Initial state
+            let mut current_state = AudioState::Empty; // Initial state
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
             let sink: Sink = rodio::Sink::try_new(&stream_handle).unwrap();
             // let mut source: Option<Decoder<BufReader<File>>> = None;
@@ -75,23 +76,13 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
 
                         // Since we're only dealing with .wav files, directly attempt to decode as wav
                         let source = Decoder::new_wav(file).unwrap();
-                        let track_duration = source.total_duration().unwrap_or_default();
                         sink.stop();
+                        // sleep 200 milliseconds
+                        sleep(Duration::from_millis(200));
                         sink.append(source);
                         sink.play();
                         current_state = AudioState::Playing;
                         println!("The audio state is currently: {:?}", current_state);
-
-                        // Spawn a new thread to wait for the duration of the song
-                        let file_path_clone = file_path.clone();
-                        let track_duration_clone = track_duration;
-                        thread::spawn(move || {
-                            thread::sleep(track_duration_clone);
-                            println!("Song '{}' finished playing.", file_path_clone);
-                            // Send a message to the audio thread to skip to the next song
-
-                            current_state = AudioState::Stopped;
-                        });
                     }
                     AudioCommand::Pause => {
                         sink.pause();
@@ -101,7 +92,7 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
                     AudioCommand::Skip => {
                         if sink.len() <= 1 {
                             sink.stop();
-                            current_state = AudioState::Stopped;
+                            current_state = AudioState::Empty;
                             println!("The audio state is currently: {:?}", current_state);
                         } else {
                             sink.skip_one();
@@ -109,7 +100,12 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
                             println!("The audio state is currently: {:?}", current_state);
                         }
                     }
-                    AudioCommand::GetState(sender) => sender.send(current_state).unwrap(),
+                    AudioCommand::GetState(sender) => {
+                        if sink.empty() {
+                            current_state = AudioState::Empty;
+                        }
+                        sender.send(current_state).unwrap()
+                    }
                     AudioCommand::SetVolume(volume) => sink.set_volume(volume),
                 }
             }
