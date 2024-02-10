@@ -1,6 +1,6 @@
 use crate::TemplateApp;
 
-pub fn show_top_panel(ctx: &egui::Context, _frame: &mut eframe::Frame, app: &mut TemplateApp) {
+pub fn show_top_panel(ctx: &egui::Context, _frame: &mut eframe::Frame, _app: &mut TemplateApp) {
     egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
         // The top panel is often a good place for a menu bar:
 

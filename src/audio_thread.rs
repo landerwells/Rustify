@@ -7,15 +7,16 @@ use std::io::BufReader;
 use std::sync::mpsc::{self, Sender};
 use std::thread;
 use std::thread::sleep;
-use std::time::{Duration, Instant};
+use std::time::Duration;
+// use std::time::Instant;
 
 pub enum AudioCommand {
     SetVolume(f32),
     PlaySong(String),
     SetProgress(f32),
     // IsEmpty(Sender<bool>),
-    GetProgress(Sender<Duration>),
-    GetTrackDuration(Sender<Duration>),
+    // GetProgress(Sender<Duration>),
+    // GetTrackDuration(Sender<Duration>),
     Play,
     Pause,
     Skip,
@@ -40,20 +41,20 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
             let sink: Sink = rodio::Sink::try_new(&stream_handle).unwrap();
             // let mut source: Option<Decoder<BufReader<File>>> = None;
-            let mut start_time: Option<Instant> = None;
-            let mut track_duration: Option<Duration> = None;
+            // let mut start_time: Option<Instant> = None;
+            // let mut track_duration: Option<Duration> = None;
 
             for command in receiver {
                 match command {
-                    AudioCommand::GetTrackDuration(sender) => {
-                        let _ = sender.send(track_duration.unwrap());
-                    }
-                    AudioCommand::GetProgress(sender) => {
-                        let elapsed_time = start_time
-                            .map(|start| start.elapsed())
-                            .unwrap_or_else(|| Duration::ZERO);
-                        let _ = sender.send(elapsed_time); // Send the elapsed time back
-                    }
+                    // AudioCommand::GetTrackDuration(sender) => {
+                    //     let _ = sender.send(track_duration.unwrap());
+                    // }
+                    // AudioCommand::GetProgress(sender) => {
+                    //     let elapsed_time = start_time
+                    //         .map(|start| start.elapsed())
+                    //         .unwrap_or_else(|| Duration::ZERO);
+                    //     let _ = sender.send(elapsed_time); // Send the elapsed time back
+                    // }
                     AudioCommand::SetProgress(progress) => {
                         // Set the progress of the currently playing track
                         // This is where you would update the progress bar in the UI
