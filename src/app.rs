@@ -19,6 +19,9 @@ pub struct TemplateApp {
     pub track_progress: f32,
     pub queue: Queue,
     pub track_list: Vec<Track>,
+    pub show_playlist_input: bool,
+    pub new_playlist_name: String,
+    pub playlist_creation_error: Option<String>,
     // playlist_list: PlaylistList,
     pub playlist_list: Vec<Playlist>,
 
@@ -31,6 +34,9 @@ pub struct TemplateApp {
 impl Default for TemplateApp {
     fn default() -> Self {
         Self {
+            show_playlist_input: false,
+            new_playlist_name: String::new(),
+            playlist_creation_error: None,
             // Example stuff:
             audio_state: AudioState::Empty,
             volume: 1.0,

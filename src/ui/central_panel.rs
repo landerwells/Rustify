@@ -6,6 +6,7 @@ use eframe::egui; // Make sure to import necessary modules // Import your app st
 pub fn show_central_panel(ctx: &egui::Context, app: &mut TemplateApp) {
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.vertical(|ui| {
+            // Heading needs to reflect which playlist is currently being shown
             ui.heading("Track List");
             ui.separator();
 
@@ -29,10 +30,10 @@ pub fn show_central_panel(ctx: &egui::Context, app: &mut TemplateApp) {
                             // don't want it to stay open.
                         }
                         ui.menu_button("Add to Playlist", |ui| {
-                            for playlist in &app.playlist_list {
+                            for playlist in &mut app.playlist_list {
                                 if ui.button(&playlist.name).clicked() {
                                     // Logic to add the track to the playlist
-                                    // Example: add the track to the playlist's track list
+                                    playlist.add_track(track.clone());
                                 }
                             }
                         });

@@ -37,7 +37,7 @@ pub fn show_bottom_panel(ctx: &egui::Context, app: &mut TemplateApp) {
         ui.horizontal_centered(|ui| {
             // Volume slider
             // let mut volume = self.volume; // Assuming `self.volume` holds the current volume
-            ui.add(egui::Slider::new(&mut app.volume, 0.0..=1.0).text("Volume"));
+            ui.add(egui::Slider::new(&mut app.volume, 0.0..=1.0));
             app.audio_thread_sender
                 .send(AudioCommand::SetVolume(app.volume))
                 .unwrap();
