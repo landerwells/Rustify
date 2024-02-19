@@ -70,6 +70,7 @@ pub fn show_side_panel(ctx: &egui::Context, app: &mut TemplateApp) {
             button.context_menu(|ui| {
                 if ui.button("Delete Playlist").clicked() {
                     playlists_to_delete.push(playlist.name.clone());
+                    app.track_list = audio_track::get_tracks();
                 }
             });
         }

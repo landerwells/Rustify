@@ -14,14 +14,12 @@ pub enum AudioCommand {
     SetVolume(f32),
     PlaySong(String),
     SetProgress(f32),
-    // IsEmpty(Sender<bool>),
     // GetProgress(Sender<Duration>),
     // GetTrackDuration(Sender<Duration>),
     Play,
     Pause,
     Skip,
     GetState(Sender<AudioState>),
-    // SetState(AudioState),
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]

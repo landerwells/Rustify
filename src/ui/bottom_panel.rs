@@ -70,15 +70,15 @@ pub fn show_bottom_panel(ctx: &egui::Context, app: &mut TemplateApp) {
                 app.audio_thread_sender.send(AudioCommand::Skip).unwrap();
             }
 
-            if ui
-                .add(egui::Slider::new(&mut app.track_progress, 0.0..=1.0).text("Track Progress"))
-                .changed()
-            {
-                // This block will only execute if the slider's value has changed
-                app.audio_thread_sender
-                    .send(AudioCommand::SetProgress(app.track_progress))
-                    .unwrap();
-            }
+            // if ui
+            //     .add(egui::Slider::new(&mut app.track_progress, 0.0..=1.0).text("Track Progress"))
+            //     .changed()
+            // {
+            //     // This block will only execute if the slider's value has changed
+            //     app.audio_thread_sender
+            //         .send(AudioCommand::SetProgress(app.track_progress))
+            //         .unwrap();
+            // }
         });
     });
 }
