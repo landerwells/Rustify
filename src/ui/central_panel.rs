@@ -34,6 +34,7 @@ pub fn show_central_panel(ctx: &egui::Context, app: &mut TemplateApp) {
                             app.queue.add_track(track.clone());
                             // Find a way to close the context menu since I
                             // don't want it to stay open.
+                            ui.close_menu();
                         }
                         ui.menu_button("Add to Playlist", |ui| {
                             for playlist in &mut app.playlist_list {
@@ -44,7 +45,6 @@ pub fn show_central_panel(ctx: &egui::Context, app: &mut TemplateApp) {
                             }
                         });
                     });
-
                     ui.separator();
                 }
             });

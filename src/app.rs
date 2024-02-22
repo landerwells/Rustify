@@ -18,7 +18,6 @@ pub struct TemplateApp {
     pub track_progress: f32,
     pub track_duration: f32,
     pub queue: Queue,
-    pub track_list: Vec<Track>,
     pub show_playlist_input: bool,
     pub new_playlist_name: String,
     pub playlist_creation_error: Option<String>,
@@ -28,6 +27,8 @@ pub struct TemplateApp {
     pub audio_thread_sender: std::sync::mpsc::Sender<AudioCommand>,
     #[serde(skip)]
     pub current_playlist: Option<String>,
+    #[serde(skip)]
+    pub track_list: Vec<Track>,
 }
 
 impl Default for TemplateApp {
@@ -71,7 +72,7 @@ impl eframe::App for TemplateApp {
         eframe::set_value(storage, eframe::APP_KEY, self);
     }
 
-    /// Called each time the UI needs repainting, which may be many times per second.
+    // Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         // Top Panel:
         // Responsible for displaying the menu bar and the dark/light mode
@@ -79,7 +80,7 @@ impl eframe::App for TemplateApp {
         ui::top_panel::show_top_panel(ctx, _frame, self);
 
         // Side Panel:
-        // Responisble for displaying all the playlists and the ability to add
+        // Responsible for displaying all the playlists and the ability to add
         // new ones.
         ui::side_panel::show_side_panel(ctx, self);
 

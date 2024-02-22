@@ -13,7 +13,8 @@ pub struct Track {
 
 impl Track {
     pub fn new(file_path: String) -> Result<Track, String> {
-        let title = file_path.split('/').last().unwrap().to_string();
+        let mut title = file_path.split('/').last().unwrap().to_string();
+        title = title.split('.').next().unwrap().to_string();
 
         Ok(Track {
             title,
