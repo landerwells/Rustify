@@ -5,7 +5,6 @@ use crate::audio_track;
 use crate::audio_track::Track;
 // use crate::audio_track::TrackList;
 use crate::playlist::Playlist;
-// use crate::playlist::PlaylistList;
 use crate::queue::Queue;
 use crate::ui;
 
@@ -17,36 +16,35 @@ pub struct TemplateApp {
     pub audio_state: AudioState,
     pub volume: f32,
     pub track_progress: f32,
+    pub track_duration: f32,
     pub queue: Queue,
     pub track_list: Vec<Track>,
     pub show_playlist_input: bool,
     pub new_playlist_name: String,
     pub playlist_creation_error: Option<String>,
-    // playlist_list: PlaylistList,
     pub playlist_list: Vec<Playlist>,
 
     #[serde(skip)]
     pub audio_thread_sender: std::sync::mpsc::Sender<AudioCommand>,
-    // #[serde(skip)]
-    // pub track_list: TrackList,
+    #[serde(skip)]
+    pub current_playlist: Option<String>,
 }
 
 impl Default for TemplateApp {
     fn default() -> Self {
         Self {
-            show_playlist_input: false,
+            audio_state: AudioState::Empty,
+            audio_thread_sender: create_audio_thread(),
             new_playlist_name: String::new(),
             playlist_creation_error: None,
-            // Example stuff:
-            audio_state: AudioState::Empty,
-            volume: 1.0,
-            track_progress: 0.0,
-            track_list: audio_track::get_tracks(),
-            // track_list: TrackList::get_tracks(),
-            audio_thread_sender: create_audio_thread(),
-            queue: Queue::new(),
-            // playlist_list: PlaylistList::new(),
             playlist_list: Vec::new(),
+            queue: Queue::new(),
+            show_playlist_input: false,
+            track_duration: 0.0,
+            track_list: audio_track::get_tracks(),
+            track_progress: 0.0,
+            volume: 1.0,
+            current_playlist: None,
         }
     }
 }

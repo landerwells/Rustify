@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::time::Duration;
+use std::vec::IntoIter;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Track {
@@ -53,8 +54,6 @@ pub fn get_tracks() -> Vec<Track> {
     }
     tracks
 }
-
-use std::vec::IntoIter; // Import IntoIter
 
 impl IntoIterator for TrackList {
     type Item = Track;

@@ -6,13 +6,18 @@ use eframe::egui; // Make sure to import necessary modules // Import your app st
 pub fn show_central_panel(ctx: &egui::Context, app: &mut TemplateApp) {
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.vertical(|ui| {
-            // Heading needs to reflect which playlist is currently being shown
-            ui.heading("Track List");
+            // Determine the header text based on the current playlist
+            let header_text = match &app.current_playlist {
+                Some(playlist_name) => playlist_name,
+                None => "All Songs",
+            };
+            ui.heading(header_text);
+
             ui.separator();
 
             egui::ScrollArea::vertical().show(ui, |ui| {
                 for track in &app.track_list {
-                    let button = ui.button(&track.title);
+                    let button = ui.add(egui::Button::new(&track.title));
 
                     if button.clicked() {
                         // Logic to play the track

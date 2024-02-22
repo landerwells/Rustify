@@ -2,8 +2,6 @@ use crate::audio_track;
 use crate::playlist::Playlist;
 use crate::TemplateApp;
 
-// Getting some coupling here, would like to extract the more technical
-// details into the playlist module but not for right now.
 pub fn show_side_panel(ctx: &egui::Context, app: &mut TemplateApp) {
     egui::SidePanel::left("side_panel").show(ctx, |ui| {
         ui.heading("Playlists");
@@ -11,6 +9,7 @@ pub fn show_side_panel(ctx: &egui::Context, app: &mut TemplateApp) {
 
         if ui.button("All Songs").clicked() {
             app.track_list = audio_track::get_tracks();
+            app.current_playlist = None;
         }
 
         if ui.button("Add Playlist").clicked() {
@@ -63,8 +62,7 @@ pub fn show_side_panel(ctx: &egui::Context, app: &mut TemplateApp) {
 
             if button.clicked() {
                 app.track_list = playlist.tracks.clone();
-                // Left-click logic
-                // e.g., Display songs in this playlist in the central display
+                app.current_playlist = Some(playlist.name.clone());
             }
 
             button.context_menu(|ui| {
