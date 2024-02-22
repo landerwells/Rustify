@@ -17,17 +17,18 @@ pub fn show_central_panel(ctx: &egui::Context, app: &mut TemplateApp) {
 
             egui::ScrollArea::vertical().show(ui, |ui| {
                 for track in &app.track_list {
-                    let button = ui.add(egui::Button::new(&track.title));
+                    let button =
+                        egui::Button::new(&track.title).fill(ui.style().visuals.window_fill());
 
-                    if button.clicked() {
-                        // Logic to play the track
-                        // Example: send a play command with the track's file path
+                    let response = ui.add(button);
+
+                    if response.clicked() {
                         app.audio_thread_sender
                             .send(AudioCommand::PlaySong(track.file_path.clone()))
                             .unwrap();
                     }
 
-                    button.context_menu(|ui| {
+                    response.context_menu(|ui| {
                         // add to queue
                         if ui.button("Add to Queue").clicked() {
                             app.queue.add_track(track.clone());
