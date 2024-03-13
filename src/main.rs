@@ -4,10 +4,8 @@
 // When compiling natively:
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result<()> {
-    // use eframe::{run_native, IconData, NativeOptions};
     use eframe::IconData;
     use image::io::Reader as ImageReader;
-    // use image::GenericImageView;
     use std::path::Path;
 
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).

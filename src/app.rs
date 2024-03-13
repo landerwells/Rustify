@@ -3,16 +3,13 @@ use crate::audio_thread::AudioCommand;
 use crate::audio_thread::AudioState;
 use crate::audio_track;
 use crate::audio_track::Track;
-// use crate::audio_track::TrackList;
 use crate::playlist::Playlist;
 use crate::queue::Queue;
 use crate::ui;
 
-/// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
-#[serde(default)] // if we add new fields, give them default values when deserializing old state
+#[serde(default)]
 pub struct TemplateApp {
-    // Example stuff:
     pub audio_state: AudioState,
     pub volume: f32,
     pub track_progress: f32,
@@ -29,6 +26,8 @@ pub struct TemplateApp {
     pub current_playlist: Option<String>,
     #[serde(skip)]
     pub track_list: Vec<Track>,
+    #[serde(skip)]
+    pub current_track: Option<String>,
 }
 
 impl Default for TemplateApp {
@@ -36,6 +35,7 @@ impl Default for TemplateApp {
         Self {
             audio_state: AudioState::Empty,
             audio_thread_sender: create_audio_thread(),
+            current_track: None,
             new_playlist_name: String::new(),
             playlist_creation_error: None,
             playlist_list: Vec::new(),

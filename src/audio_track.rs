@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::time::Duration;
-use std::vec::IntoIter;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Track {
@@ -25,24 +24,24 @@ impl Track {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct TrackList {
-    pub tracks: Vec<Track>,
-}
+// #[derive(Serialize, Deserialize)]
+// pub struct TrackList {
+//     pub tracks: Vec<Track>,
+// }
 
-impl TrackList {
-    pub fn new() -> Self {
-        Self { tracks: Vec::new() }
-    }
+// impl TrackList {
+// pub fn new() -> Self {
+//     Self { tracks: Vec::new() }
+// }
 
-    pub fn add_track(&mut self, track: Track) {
-        self.tracks.push(track);
-    }
+//     pub fn add_track(&mut self, track: Track) {
+//         self.tracks.push(track);
+//     }
 
-    pub fn remove_track(&mut self, track: Track) {
-        self.tracks.retain(|t| t.file_path != track.file_path);
-    }
-}
+//     pub fn remove_track(&mut self, track: Track) {
+//         self.tracks.retain(|t| t.file_path != track.file_path);
+//     }
+// }
 
 pub fn get_tracks() -> Vec<Track> {
     let mut tracks = Vec::new();
@@ -56,14 +55,14 @@ pub fn get_tracks() -> Vec<Track> {
     tracks
 }
 
-impl IntoIterator for TrackList {
-    type Item = Track;
-    type IntoIter = IntoIter<Track>;
+// impl IntoIterator for TrackList {
+//     type Item = Track;
+//     type IntoIter = IntoIter<Track>;
 
-    fn into_iter(self) -> Self::IntoIter {
-        self.tracks.into_iter()
-    }
-}
+//     fn into_iter(self) -> Self::IntoIter {
+//         self.tracks.into_iter()
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
