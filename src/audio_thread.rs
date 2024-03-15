@@ -54,7 +54,6 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
                                 Duration::from_secs(0)
                             },
                             AudioState::Paused => {
-                                // If paused, calculate progress up to the pause time
                                 last_pause_time.map_or(Duration::from_secs(0), |pause_time| {
                                     start_time.map_or(Duration::from_secs(0), |start| pause_time.duration_since(start))
                                 })
@@ -103,26 +102,15 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
                     },
 
                     AudioCommand::Play => {
-                        // Calculate the total paused duration if there's a last_pause_time.
-                        // This assumes `last_pause_time` represents the moment the latest pause began,
-                        // and `elapsed_before_pause` accumulates all pause durations before the latest one.
                         if let Some(last_pause) = last_pause_time {
                             let pause_duration = Instant::now().duration_since(last_pause);
-                            // Adjust the start_time by the total pause duration (including the most recent pause).
-                            // This essentially "moves" the start_time forward by pause_duration, shortening the total elapsed time by the paused duration.
                             start_time = Some(start_time.unwrap_or(Instant::now()) + pause_duration);
                         } else {
-                            // If there's no pause (e.g., starting playback for the first time), initialize start_time to now.
                             start_time = Some(Instant::now());
                         }
 
-                        // Reset last_pause_time as playback is resuming.
                         last_pause_time = None;
-
-                        // Start or resume playback.
                         sink.play();
-
-                        // Update current state to Playing.
                         current_state = AudioState::Playing;
                     },
 

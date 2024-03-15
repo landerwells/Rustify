@@ -35,11 +35,16 @@ pub fn show_bottom_panel(ctx: &egui::Context, app: &mut TemplateApp) {
 
     egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
         ui.horizontal_centered(|ui| {
+            ui.spacing_mut().item_spacing.x = 10.0; // Adjust spacing as needed
+
             // Volume slider
+            ui.label("Volume:"); // Optionally, add a label for clarity
             ui.add(egui::Slider::new(&mut app.volume, 0.0..=1.0));
             app.audio_thread_sender
                 .send(AudioCommand::SetVolume(app.volume))
                 .unwrap();
+
+            ui.separator();
 
             let button_label = if app.audio_state == AudioState::Playing {
                 "⏸"
@@ -64,9 +69,13 @@ pub fn show_bottom_panel(ctx: &egui::Context, app: &mut TemplateApp) {
                 }
             }
 
+            ui.separator();
+
             if ui.button("⏭").clicked() {
                 app.audio_thread_sender.send(AudioCommand::Skip).unwrap();
             }
+
+            ui.separator();
 
             let (progress_sender, progress_reciever) = std::sync::mpsc::channel();
             app.audio_thread_sender
@@ -99,6 +108,7 @@ pub fn show_bottom_panel(ctx: &egui::Context, app: &mut TemplateApp) {
                     ))
                     .unwrap();
             }
+
         });
     });
 }

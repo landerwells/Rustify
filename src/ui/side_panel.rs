@@ -1,4 +1,5 @@
 use crate::audio_track;
+use crate::queue::Queue;
 use crate::playlist::Playlist;
 use crate::TemplateApp;
 
@@ -12,8 +13,17 @@ pub fn show_side_panel(ctx: &egui::Context, app: &mut TemplateApp) {
             app.current_playlist = None;
         }
 
+        ui.separator();
+
         if ui.button("Add Playlist").clicked() {
             app.show_playlist_input = true;
+        }
+
+        ui.separator();
+
+        if ui.button("Queue").clicked() {
+            app.track_list = Queue::get_tracks(&app.queue);
+            app.current_playlist = None;
         }
 
         if app.show_playlist_input {

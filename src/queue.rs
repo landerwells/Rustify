@@ -20,4 +20,8 @@ impl Queue {
     pub fn remove_track(&mut self, track: Track) {
         self.tracks.retain(|t| t.file_path != track.file_path);
     }
+
+    pub fn get_tracks(&self) -> Vec<Track> {
+        self.tracks.clone()
+    }
 }
