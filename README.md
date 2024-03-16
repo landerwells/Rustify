@@ -4,7 +4,7 @@
 
 ## Notes
 
-![Rustify](https://github.com/landerwells/Rustify/blob/master/rustify.jpg?raw=true)
+![Rustify](https://github.com/landerwells/Rustify/blob/master/rustify.png?raw=true)
 Need to work on the play pause functionality paired with the track progress bar
 as there are some bugs making them desync
 
