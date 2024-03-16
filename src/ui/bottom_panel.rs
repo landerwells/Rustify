@@ -101,6 +101,10 @@ pub fn show_bottom_panel(ctx: &egui::Context, app: &mut TemplateApp) {
                 )
                 .changed()
             {
+                // if no current track do nothing
+                if app.current_track.is_none() {
+                    return;
+                }
                 app.audio_thread_sender
                     .send(AudioCommand::SetProgress(
                         app.track_progress,

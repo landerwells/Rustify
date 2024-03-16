@@ -73,7 +73,6 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
                         }
                     },
 
-                    // this method might need some more work to be production ready
                     AudioCommand::SetProgress(progress, file_path) => {
                         sink.stop();
                         let file = match File::open(&file_path) {
@@ -95,9 +94,8 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
                             sink.play();
                             start_time = Some(Instant::now() - skip_duration);
                         } else if current_state == AudioState::Paused {
-                            // Adjust start_time to reflect the progress point without resuming playback.
-                            // This ensures that when we resume, we do so from the correct point.
                             start_time = Some(Instant::now() - skip_duration);
+                            last_pause_time = Some(Instant::now());
                         }
                     },
 
@@ -138,7 +136,6 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
                         sink.pause();
                         current_state = AudioState::Paused;
                         last_pause_time = Some(Instant::now());
-                        println!("The audio state is currently: {:?}", current_state);
                     },
                     // Below this nothing should need to be changed
                     AudioCommand::Skip => {
@@ -149,7 +146,6 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
                             sink.skip_one();
                             current_state = AudioState::Playing;
                         }
-                        println!("The audio state is currently: {:?}", current_state);
                     }
                     AudioCommand::GetTrackDuration(sender) => {
                         if current_state == AudioState::Empty {
