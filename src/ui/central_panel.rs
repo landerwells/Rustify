@@ -33,13 +33,32 @@ pub fn show_central_panel(ctx: &egui::Context, app: &mut TemplateApp) {
                             app.queue.add_track(track.clone());
                             ui.close_menu();
                         }
-                        ui.menu_button("Add to Playlist", |ui| {
-                            for playlist in &mut app.playlist_list {
-                                if ui.button(&playlist.name).clicked() {
-                                    playlist.add_track(track.clone());
+                        // Condition to separate whether the song should be added or removed from
+                        // the playlist
+                        if app.current_playlist.is_some() {
+                            if ui.button("Remove from Playlist").clicked() {
+                                if let Some(playlist_name) = &app.current_playlist {
+                                    if let Some(playlist) = app
+                                        .playlist_list
+                                            .iter_mut()
+                                            .find(|playlist| playlist.name == *playlist_name)
+                                            {
+                                                // need to find some way to update the track list
+                                                playlist.remove_track(track.clone());
+                                            }
                                 }
+                                ui.close_menu();
                             }
-                        });
+                        } else {
+                            ui.menu_button("Add to Playlist", |ui| {
+                                for playlist in &mut app.playlist_list {
+                                    if ui.button(&playlist.name).clicked() {
+                                        playlist.add_track(track.clone());
+                                        ui.close_menu();
+                                    }
+                                }
+                            });
+                        }
                     });
                     ui.separator();
                 }

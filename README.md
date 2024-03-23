@@ -18,13 +18,11 @@ Rustify is an innovative, cross-platform audio player built with the Rust progra
 
 - **Playlist Management**: Organize your music collection with ease. Rustify allows users to create, edit, and manage playlists directly within the application, providing a flexible way to enjoy your music according to your mood, occasion, or preference.
 
-- **Customizable Settings**: Tailor Rustify to your liking with customizable settings, including audio output device selection, volume control, and theme preferences. Our goal is to make your listening experience as personal and enjoyable as possible.
-
 ## Getting Started
 
 ### Installation
 
-Rustify can be easily installed on any supported platform. For detailed installation instructions, please refer to our [installation guide](#).
+Rustify can be easily installed on any supported platform with the following instructions.
 
 ### Building from Source
 
@@ -44,10 +42,6 @@ cargo build --release
 cargo run --release
 ```
 
-## Contributing
-
-We welcome contributions to Rustify! Whether it's submitting bug reports, requesting features, or contributing code, your input is invaluable in making Rustify better. Please see our [contributing guidelines](CONTRIBUTING.md) for more information on getting involved.
-
 ## License
 
 Rustify is released under the [MIT License](LICENSE). Feel free to use, modify, and distribute it as per the license terms.
@@ -59,7 +53,3 @@ Rustify would not be possible without the fantastic Rust ecosystem and its many 
 ---
 
 Rustify represents a blend of modern software development practices, a passion for music, and the unmatched speed and safety of Rust. As an open-source project, it continues to evolve, thanks to the vibrant community of Rustaceans and music enthusiasts alike. Join us in making Rustify the go-to audio player for desktop environments!
-
----
-
-Note: This README is a starting point and should be customized to include specific installation instructions, screenshots, and any additional details relevant to your project.
