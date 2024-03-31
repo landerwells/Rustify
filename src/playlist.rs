@@ -30,8 +30,4 @@ impl Playlist {
     pub fn delete(&mut self) {
         self.tracks.clear();
     }
-
-    pub fn play(&self) {
-        // play the playlist
-    }
 }

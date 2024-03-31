@@ -52,4 +52,4 @@ Rustify would not be possible without the fantastic Rust ecosystem and its many 
 
 ---
 
-Rustify represents a blend of modern software development practices, a passion for music, and the unmatched speed and safety of Rust. As an open-source project, it continues to evolve, thanks to the vibrant community of Rustaceans and music enthusiasts alike. Join us in making Rustify the go-to audio player for desktop environments!
+Rustify represents a blend of modern software development practices, a passion for music, and the unmatched speed and safety of Rust. As an open-source project, it continues to evolve, thanks to the vibrant community of Rustaceans and music enthusiasts alike. 
