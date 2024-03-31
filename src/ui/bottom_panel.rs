@@ -94,6 +94,8 @@ pub fn show_bottom_panel(ctx: &egui::Context, app: &mut TemplateApp) {
             let duration = duration_reciever.recv().unwrap();
             app.track_duration = duration.as_secs_f32();
 
+            // Need to make the track progress bar not accesssible when a song is
+            // not currently playing
             if ui
                 .add(
                     egui::Slider::new(&mut app.track_progress, 0.0..=app.track_duration)
