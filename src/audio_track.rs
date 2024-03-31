@@ -24,25 +24,6 @@ impl Track {
     }
 }
 
-// #[derive(Serialize, Deserialize)]
-// pub struct TrackList {
-//     pub tracks: Vec<Track>,
-// }
-
-// impl TrackList {
-// pub fn new() -> Self {
-//     Self { tracks: Vec::new() }
-// }
-
-//     pub fn add_track(&mut self, track: Track) {
-//         self.tracks.push(track);
-//     }
-
-//     pub fn remove_track(&mut self, track: Track) {
-//         self.tracks.retain(|t| t.file_path != track.file_path);
-//     }
-// }
-
 pub fn get_tracks() -> Vec<Track> {
     let mut tracks = Vec::new();
     if let Ok(entries) = fs::read_dir("assets/tracks") {
@@ -54,15 +35,6 @@ pub fn get_tracks() -> Vec<Track> {
     }
     tracks
 }
-
-// impl IntoIterator for TrackList {
-//     type Item = Track;
-//     type IntoIter = IntoIter<Track>;
-
-//     fn into_iter(self) -> Self::IntoIter {
-//         self.tracks.into_iter()
-//     }
-// }
 
 #[cfg(test)]
 mod tests {
