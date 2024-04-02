@@ -74,6 +74,8 @@ impl eframe::App for TemplateApp {
 
     // Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        // Update the current app state
+        ui::ui_state::update_app_state(self);
         // Top Panel:
         // Responsible for displaying the menu bar and the dark/light mode
         // buttons.

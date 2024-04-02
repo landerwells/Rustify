@@ -4,34 +4,6 @@ use crate::TemplateApp;
 
 pub fn show_bottom_panel(ctx: &egui::Context, app: &mut TemplateApp) {
     ctx.request_repaint();
-    let (state_sender, state_receiver) = std::sync::mpsc::channel();
-    app.audio_thread_sender
-        .send(AudioCommand::GetState(state_sender))
-        .unwrap();
-
-    // Receive the current state
-    match state_receiver.recv() {
-        Ok(AudioState::Playing) => {
-            app.audio_state = AudioState::Playing;
-        }
-        Ok(AudioState::Paused) => {
-            app.audio_state = AudioState::Paused;
-        }
-        Ok(AudioState::Empty) => {
-            if app.queue.tracks.len() > 0 {
-                app.audio_state = AudioState::Playing;
-                app.audio_thread_sender
-                    .send(AudioCommand::PlaySong(
-                        app.queue.tracks[0].file_path.clone(),
-                    ))
-                    .unwrap();
-                app.queue.tracks.remove(0);
-            } else {
-                app.audio_state = AudioState::Empty;
-            }
-        }
-        _ => (),
-    }
 
     egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
         ui.horizontal_centered(|ui| {
@@ -114,7 +86,6 @@ pub fn show_bottom_panel(ctx: &egui::Context, app: &mut TemplateApp) {
                     ))
                     .unwrap();
             }
-
         });
     });
 }
