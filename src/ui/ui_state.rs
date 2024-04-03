@@ -27,6 +27,7 @@ pub fn update_app_state(app: &mut TemplateApp) {
                 app.queue.tracks.remove(0);
             } else {
                 app.audio_state = AudioState::Empty;
+                app.current_track = None;
             }
         }
         _ => (),
