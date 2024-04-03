@@ -15,7 +15,7 @@ pub fn show_central_panel(ctx: &egui::Context, app: &mut TemplateApp) {
             ui.separator();
 
             egui::ScrollArea::vertical().show(ui, |ui| {
-                for track in &app.track_list {
+                for track in &app.track_list.clone() {
                     let button =
                         egui::Button::new(&track.title).fill(ui.style().visuals.window_fill());
 
@@ -45,6 +45,9 @@ pub fn show_central_panel(ctx: &egui::Context, app: &mut TemplateApp) {
                                             {
                                                 // need to find some way to update the track list
                                                 playlist.remove_track(track.clone());
+                                                while let Some(index) = app.track_list.iter().position(|x| x == track) {
+                                                    app.track_list.remove(index);
+                                                }
                                             }
                                 }
                                 ui.close_menu();
