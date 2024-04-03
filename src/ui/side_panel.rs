@@ -23,7 +23,7 @@ pub fn show_side_panel(ctx: &egui::Context, app: &mut TemplateApp) {
 
         if ui.button("Queue").clicked() {
             app.track_list = Queue::get_tracks(&app.queue);
-            app.current_playlist = None;
+            app.current_playlist = Some("Queue".to_string());
         }
 
         if app.show_playlist_input {
@@ -79,6 +79,7 @@ pub fn show_side_panel(ctx: &egui::Context, app: &mut TemplateApp) {
                 if ui.button("Delete Playlist").clicked() {
                     playlists_to_delete.push(playlist.name.clone());
                     app.track_list = audio_track::get_tracks();
+                    app.current_playlist = None;
                 }
             });
         }
