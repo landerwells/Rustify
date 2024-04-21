@@ -113,7 +113,6 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
                     },
 
                     AudioCommand::PlaySong(file_path) => {
-                        // extract out into seperate method
                         let file = match File::open(&file_path) {
                             Ok(f) => BufReader::new(f),
                             Err(e) => {
