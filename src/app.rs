@@ -86,14 +86,15 @@ impl eframe::App for TemplateApp {
         // new ones.
         ui::side_panel::show_side_panel(ctx, self);
 
+        // Bottom Panel:
+        // Responsible for displaying the volume slider, play/pause button,
+        // skip button, and the track progress bar.
+        ui::bottom_panel::show_bottom_panel(ctx, self);
+
         // Central Panel:
         // Responsible for displaying all tracks or tracks in the current
         // playlist.
         ui::central_panel::show_central_panel(ctx, self);
 
-        // Bottom Panel:
-        // Responsible for displaying the volume slider, play/pause button,
-        // skip button, and the track progress bar.
-        ui::bottom_panel::show_bottom_panel(ctx, self);
     }
 }
