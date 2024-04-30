@@ -7,6 +7,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::sync::mpsc::{self, Sender};
 use std::thread;
+use std::thread::sleep;
 use std::time::Duration;
 use std::time::Instant;
 
@@ -37,7 +38,7 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
         .spawn(move || {
             let mut current_state = AudioState::Empty; // Initial state
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
-            let sink: Sink = rodio::Sink::try_new(&stream_handle).unwrap();
+            let mut sink: Sink = rodio::Sink::try_new(&stream_handle).unwrap();
             let mut source: Decoder<BufReader<File>>;
             let mut start_time: Option<Instant> = None;
             let mut last_pause_time: Option<Instant> = None;
@@ -121,14 +122,34 @@ pub fn create_audio_thread() -> Sender<AudioCommand> {
                             }
                         };
 
-                        source = Decoder::new_wav(file).unwrap();
-                        track_duration = Some(source.total_duration().unwrap());
-                        sink.clear();
-                        sink.append(source);
-                        sink.play();
-                        start_time = Some(Instant::now());
-                        last_pause_time = None; 
+                        // Attempt to decode the new audio file
+                        let new_source = match Decoder::new_wav(file) {
+                            Ok(source) => source,
+                            Err(e) => {
+                                eprintln!("Error decoding file: {}", e);
+                                continue;
+                            }
+                        };
+
+                        // Calculate duration of the track
+                        track_duration = new_source.total_duration();
+
+                        // Create a new sink for the audio output device
+                        let new_sink: Sink = rodio::Sink::try_new(&stream_handle).unwrap();
+
+                        // Clear the old sink (optional, depends on whether you want to overlap or immediately stop previous audio)
+                        sink.stop();
+
+                        // Append the new source to the new sink and start playing
+                        new_sink.append(new_source);
+                        new_sink.play();
+
+                        // Update the current sink to the new sink
+                        sink = new_sink;
+
                         current_state = AudioState::Playing;
+                        start_time = Some(Instant::now());
+                        last_pause_time = None;
                     }
 
                     AudioCommand::Pause => {
